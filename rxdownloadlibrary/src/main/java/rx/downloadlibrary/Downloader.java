@@ -63,7 +63,7 @@ public class Downloader {
 
     @Subscribe(threadType = NYThread.MAIN)
     public void onEvent(ProgressEvent event) {
-        if (listener != null) listener.onProgress(event.getProgress());
+        if (listener != null) listener.onProgress(event);
     }
 
     public void downloadZipFile(String url, File destination) {
@@ -148,49 +148,11 @@ public class Downloader {
     private Function<? super File, ? extends ObservableSource<File>> unPackTgz() {
         return new Function<File, ObservableSource<File>>() {
             @Override
-            public ObservableSource<File> apply(File file) throws Exception {
-                InputStream is;
-                ZipInputStream zis;
-                String parentFolder;
-                String filename;
-                try {
-                    parentFolder = file.getParentFile().getPath();
+            public ObservableSource<File> apply(File file) {
 
-                    is = new FileInputStream(file.getAbsolutePath());
-                    zis = new ZipInputStream(new BufferedInputStream(is));
-                    ZipEntry ze;
-                    byte[] buffer = new byte[1024];
-                    int count;
+                //TODO unzip tgz file
 
-                    while ((ze = zis.getNextEntry()) != null) {
-                        filename = ze.getName();
-
-                        if (ze.isDirectory()) {
-                            File fmd = new File(parentFolder + "/" + filename);
-                            fmd.mkdirs();
-                            continue;
-                        }
-
-                        FileOutputStream fout = new FileOutputStream(parentFolder + "/" + filename);
-
-                        while ((count = zis.read(buffer)) != -1) {
-                            fout.write(buffer, 0, count);
-                        }
-
-                        fout.close();
-                        zis.closeEntry();
-                    }
-
-                    zis.close();
-
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-
-
-                File extractedFile = new File(file.getAbsolutePath().replace(".zip", ""));
-                if (!file.delete()) Log.d("unpackZip", "Failed to deleted the zip file.");
-                return Observable.just(extractedFile);
+                return Observable.just(file);
             }
         };
     }

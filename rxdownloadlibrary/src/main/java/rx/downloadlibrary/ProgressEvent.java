@@ -28,4 +28,9 @@ public class ProgressEvent {
     public boolean percentIsAvailable() {
         return contentLength > 0;
     }
+
+    @Override
+    public String toString() {
+        return String.format("%s %d%%", getDownloadIdentifier(), getProgress());
+    }
 }

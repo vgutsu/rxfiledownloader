@@ -1,16 +1,14 @@
 package com.example.retrofitdownloadzip;
 
 import android.os.Bundle;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
 
 import java.io.File;
 
-import io.reactivex.functions.Consumer;
 import rx.downloadlibrary.Downloader;
-import rx.downloadlibrary.FileDownloader;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
@@ -26,12 +24,13 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.download_rxjava).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                downloadZipFileRx();
+                downloadTgzFileRx();
             }
         });
         findViewById(R.id.download_rxkotlin).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Snackbar.make(v, "not done yet", Snackbar.LENGTH_SHORT).show();
                 downloadZipFileRxKotlin();
             }
         });
@@ -47,26 +46,17 @@ public class MainActivity extends AppCompatActivity {
 
     private void downloadZipFileRxKotlin() {
         // does not work for now
-
         String url = "https://pkg.popguide.me/PM_000579_en_v20181018_124932.tgz";
         File saveLocation = new File(getFilesDir() + File.separator + "PM_000579_en_v20181018_124932.tgz");
-
-        FileDownloader fileDownloader = new FileDownloader("https://google.com");
-        fileDownloader.download(url, saveLocation, new Consumer<Integer>() {
-            @Override
-            public void accept(Integer integer) throws Exception {
-                Log.e("", integer.toString());
-            }
-        });
 
     }
 
 
-    private void downloadZipFileRx() {
+    private void downloadTgzFileRx() {
         String url = "https://pkg.popguide.me/PM_000579_en_v20181018_124932.tgz";
         File saveLocation = new File(getFilesDir() + File.separator + "PM_000579_en_v20181018_124932.tgz");
         downloader = new Downloader();
-        downloader.registerListener(progress -> progressView.setText("" + progress));
-        downloader.downloadFile(url, saveLocation);
+        downloader.registerListener(progress -> progressView.setText(progress.toString()));
+        downloader.downloadFileTgz(url, saveLocation);
     }
 }
