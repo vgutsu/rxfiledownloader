@@ -167,7 +167,7 @@ public class Downloader {
             @Override
             public void onSubscribe(Disposable d) {
 //                subscritions.add(d);
-                compositeDisposable.add(d);
+//                compositeDisposable.add(d);
                 Log.d("OnSubscribe", "OnSubscribe");
             }
 
