@@ -3,9 +3,6 @@ package rx.downloadlibrary;
 import android.util.Log;
 
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
-import com.mindorks.nybus.NYBus;
-import com.mindorks.nybus.annotation.Subscribe;
-import com.mindorks.nybus.thread.NYThread;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -18,12 +15,11 @@ import java.util.zip.ZipInputStream;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
-import io.reactivex.Observer;
-import io.reactivex.Scheduler;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
+import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 import okhttp3.ResponseBody;
@@ -36,9 +32,7 @@ import rx.RxBus;
 public class Downloader {
 
     private RetrofitService downloadService;
-//    private ProgressListener listener;
 
-    //    private List<Disposable> subscritions = new ArrayList<>();
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     public Downloader() {
@@ -60,43 +54,36 @@ public class Downloader {
 //        this.listener = l;
     }
 
-//    public void unRegisterListener() {
-//        NYBus.get().unregister(this);
-//        this.listener = null;
-//    }
-
-
-//    @Subscribe(threadType = NYThread.MAIN)
-//    public void onEvent(ProgressEvent event) {
-//        if (listener != null) listener.onProgress(event);
-//    }
-
     public void downloadZipFile(String url, File destination) {
         // we register our progress subscriber to the Bus
         // and we only listen for ProgressEvent class events
-        downloadService.downloadFile(url)
+        Disposable d = downloadService.downloadFile(url)
                 .subscribeOn(Schedulers.io())
                 .flatMap(saveFile(destination))
-                .flatMap(unPackZip()).subscribe(handleResult());
+                .flatMap(unPackZip())
+                .subscribeWith(handleResult());
+        compositeDisposable.add(d);
     }
 
     public void downloadFile(String url, File destination) {
         // we register our progress subscriber to the Bus
         // and we only listen for ProgressEvent class events
-        downloadService.downloadFile(url)
+        Disposable d = downloadService.downloadFile(url)
                 .subscribeOn(Schedulers.io())
                 .flatMap(saveFile(destination))
-                .subscribe(handleResult());
+                .subscribeWith(handleResult());
+        compositeDisposable.add(d);
     }
 
     public void downloadFileTgz(String url, File destination) {
         // we register our progress subscriber to the Bus
         // and we only listen for ProgressEvent class events
-        downloadService.downloadFile(url)
+        Disposable d = downloadService.downloadFile(url)
                 .subscribeOn(Schedulers.io())
                 .flatMap(saveFile(destination))
                 .flatMap(unPackTgz())
-                .subscribe(handleResult());
+                .subscribeWith(handleResult());
+        compositeDisposable.add(d);
     }
 
 
@@ -162,14 +149,8 @@ public class Downloader {
         };
     }
 
-    private Observer<File> handleResult() {
-        return new Observer<File>() {
-            @Override
-            public void onSubscribe(Disposable d) {
-//                subscritions.add(d);
-//                compositeDisposable.add(d);
-                Log.d("OnSubscribe", "OnSubscribe");
-            }
+    private DisposableObserver<File> handleResult() {
+        return new DisposableObserver<File>() {
 
             @Override
             public void onNext(File file) {

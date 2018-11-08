@@ -44,16 +44,21 @@ public class DownloadProgressResponseBody extends ResponseBody {
             long totalBytesRead = 0L;
 
             @Override
-            public long read(Buffer sink, long byteCount) throws IOException {
-                long bytesRead = super.read(sink, byteCount);
-                if (bytesRead != -1) {
-                    totalBytesRead += bytesRead;
-                }
+            public long read(Buffer sink, long byteCount) {
+                try {
+                    long bytesRead = super.read(sink, byteCount);
+                    if (bytesRead != -1) {
+                        totalBytesRead += bytesRead;
+                    }
 
-                if (progressListener != null) {
-                    progressListener.update("test", totalBytesRead, responseBody.contentLength(), bytesRead == -1);
+                    if (progressListener != null) {
+                        progressListener.update("test", totalBytesRead, responseBody.contentLength(), bytesRead == -1);
+                    }
+                    return bytesRead;
+                } catch (IOException e) {
+                    // ignored
                 }
-                return bytesRead;
+                return -1;
             }
         };
 

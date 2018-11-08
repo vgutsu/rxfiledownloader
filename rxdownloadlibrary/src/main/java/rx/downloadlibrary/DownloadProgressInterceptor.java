@@ -1,8 +1,6 @@
 package rx.downloadlibrary;
 
 
-import com.mindorks.nybus.NYBus;
-
 import java.io.IOException;
 
 import okhttp3.Interceptor;
