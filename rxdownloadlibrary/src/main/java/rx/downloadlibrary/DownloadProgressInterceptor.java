@@ -7,6 +7,7 @@ import java.io.IOException;
 
 import okhttp3.Interceptor;
 import okhttp3.Response;
+import rx.RxBus;
 
 public class DownloadProgressInterceptor implements Interceptor, DownloadProgressListener {
 
@@ -24,7 +25,7 @@ public class DownloadProgressInterceptor implements Interceptor, DownloadProgres
     @Override
     public void update(String downloadIdentifier, long bytesRead, long contentLength, boolean done) {
         ProgressEvent progressEvent = new ProgressEvent(downloadIdentifier, contentLength, bytesRead);
-        NYBus.get().post(progressEvent);
-
+//        NYBus.get().post(progressEvent);
+        RxBus.publish(progressEvent);
     }
 }

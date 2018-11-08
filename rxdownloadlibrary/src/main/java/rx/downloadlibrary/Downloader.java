@@ -13,14 +13,15 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 import io.reactivex.Observable;
 import io.reactivex.ObservableSource;
 import io.reactivex.Observer;
+import io.reactivex.Scheduler;
+import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Function;
 import io.reactivex.schedulers.Schedulers;
@@ -30,13 +31,15 @@ import okio.BufferedSink;
 import okio.Okio;
 import retrofit2.Response;
 import retrofit2.Retrofit;
+import rx.RxBus;
 
 public class Downloader {
 
     private RetrofitService downloadService;
-    private ProgressListener listener;
+//    private ProgressListener listener;
 
-    private List<Disposable> subscritions = new ArrayList<>();
+    //    private List<Disposable> subscritions = new ArrayList<>();
+    private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     public Downloader() {
         Retrofit retrofit = new Retrofit.Builder()
@@ -50,21 +53,23 @@ public class Downloader {
     }
 
 
-    public void registerListener(ProgressListener l) {
-        NYBus.get().register(this);
-        this.listener = l;
+    public void registerListener(ProgressListener listener) {
+//        NYBus.get().register(this);
+        Disposable disposable = RxBus.listen(ProgressEvent.class).observeOn(AndroidSchedulers.mainThread()).subscribe(listener::onProgress);
+        compositeDisposable.add(disposable);
+//        this.listener = l;
     }
 
-    public void unRegisterListener() {
-        NYBus.get().unregister(this);
-        this.listener = null;
-    }
+//    public void unRegisterListener() {
+//        NYBus.get().unregister(this);
+//        this.listener = null;
+//    }
 
 
-    @Subscribe(threadType = NYThread.MAIN)
-    public void onEvent(ProgressEvent event) {
-        if (listener != null) listener.onProgress(event);
-    }
+//    @Subscribe(threadType = NYThread.MAIN)
+//    public void onEvent(ProgressEvent event) {
+//        if (listener != null) listener.onProgress(event);
+//    }
 
     public void downloadZipFile(String url, File destination) {
         // we register our progress subscriber to the Bus
@@ -161,7 +166,8 @@ public class Downloader {
         return new Observer<File>() {
             @Override
             public void onSubscribe(Disposable d) {
-                subscritions.add(d);
+//                subscritions.add(d);
+                compositeDisposable.add(d);
                 Log.d("OnSubscribe", "OnSubscribe");
             }
 
@@ -201,11 +207,12 @@ public class Downloader {
     }
 
     public void cancel() {
-        if (subscritions != null) {
-            for (Disposable d : subscritions) {
-                d.dispose();
-                subscritions.remove(d);
-            }
-        }
+//        if (subscritions != null) {
+//            for (Disposable d : subscritions) {
+//                d.dispose();
+//                subscritions.remove(d);
+//            }
+//        }
+        compositeDisposable.clear();
     }
 }

@@ -37,7 +37,7 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                downloader.unRegisterListener();
+//                downloader.unRegisterListener();
                 downloader.cancel();
             }
         });
