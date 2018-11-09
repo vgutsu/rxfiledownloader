@@ -20,7 +20,7 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         progressView = findViewById(R.id.progress);
-
+        downloader = new Downloader();
         findViewById(R.id.download_rxjava).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
         findViewById(R.id.cancel).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-//                downloader.unRegisterListener();
                 downloader.cancel();
             }
         });
@@ -55,7 +54,6 @@ public class MainActivity extends AppCompatActivity {
     private void downloadTgzFileRx() {
         String url = "https://pkg.popguide.me/PM_000579_en_v20181018_124932.tgz";
         File saveLocation = new File(getFilesDir() + File.separator + "PM_000579_en_v20181018_124932.tgz");
-        downloader = new Downloader();
         downloader.registerListener(progress -> progressView.setText(progress.toString()));
         downloader.downloadFileTgz(url, saveLocation);
     }

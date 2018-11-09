@@ -48,10 +48,8 @@ public class Downloader {
 
 
     public void registerListener(ProgressListener listener) {
-//        NYBus.get().register(this);
         Disposable disposable = RxBus.listen(ProgressEvent.class).observeOn(AndroidSchedulers.mainThread()).subscribe(listener::onProgress);
         compositeDisposable.add(disposable);
-//        this.listener = l;
     }
 
     public void downloadZipFile(String url, File destination) {
@@ -83,6 +81,7 @@ public class Downloader {
                 .flatMap(saveFile(destination))
                 .flatMap(unPackTgz())
                 .subscribeWith(handleResult());
+
         compositeDisposable.add(d);
     }
 
@@ -188,12 +187,6 @@ public class Downloader {
     }
 
     public void cancel() {
-//        if (subscritions != null) {
-//            for (Disposable d : subscritions) {
-//                d.dispose();
-//                subscritions.remove(d);
-//            }
-//        }
         compositeDisposable.clear();
     }
 }
