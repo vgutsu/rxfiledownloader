@@ -189,4 +189,8 @@ public class Downloader {
     public void cancel() {
         compositeDisposable.clear();
     }
+
+    public void cancel(String link) {
+        compositeDisposable.clear();
+    }
 }

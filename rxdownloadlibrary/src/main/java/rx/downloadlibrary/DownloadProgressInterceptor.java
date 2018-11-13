@@ -16,14 +16,13 @@ public class DownloadProgressInterceptor implements Interceptor, DownloadProgres
     public Response intercept(Chain chain) throws IOException {
         Response originalResponse = chain.proceed(chain.request());
         return originalResponse.newBuilder()
-                .body(new DownloadProgressResponseBody(originalResponse.body(), this))
+                .body(new DownloadProgressResponseBody(originalResponse.request().url().toString(), originalResponse.body(), this))
                 .build();
     }
 
     @Override
     public void update(String downloadIdentifier, long bytesRead, long contentLength, boolean done) {
         ProgressEvent progressEvent = new ProgressEvent(downloadIdentifier, contentLength, bytesRead);
-//        NYBus.get().post(progressEvent);
         RxBus.publish(progressEvent);
     }
 }
