@@ -7,21 +7,23 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.TextView;
 
+import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.android.schedulers.AndroidSchedulers;
-import io.reactivex.observers.DisposableObserver;
-import rx.RxBus;
-import rx.downloadlibrary.ProgressEvent;
+import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
+import io.reactivex.subjects.PublishSubject;
+import rx.downloadlibrary.DownloadEvent;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
 
-    private List<String> mData;
-    private ItemClickListener mClickListener;
+    PublishSubject<DownloadEvent> publisher = PublishSubject.create();
 
-    // data is passed into the constructor
-    public MyRecyclerViewAdapter(List<String> data) {
-        this.mData = data;
+    private List<DownloadEvent> downloadEvents = new ArrayList<>();
+
+    public void setEvents(List<DownloadEvent> data) {
+        this.downloadEvents = data;
+        notifyDataSetChanged();
     }
 
     // inflates the row layout from xml when needed
@@ -34,80 +36,47 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        String link = mData.get(position);
-        holder.linkTextView.setText(link);
+        DownloadEvent downloadEvent = downloadEvents.get(position);
+        holder.linkTextView.setText(downloadEvent.getDownloadUrl());
+        holder.cancelButton.setText("" + downloadEvent.getProgress());
+        holder.itemView.setOnClickListener(v -> {
+            if (downloadEvent.getProgress() == 0 || downloadEvent.getProgress() == 100) {
+                downloadEvent.setType(DownloadEvent.Type.DOWNLOAD);
+                publisher.onNext(downloadEvent);
+            }
+        });
+        holder.cancelButton.setOnClickListener(v -> {
+            downloadEvent.setType(DownloadEvent.Type.CANCEL);
+            publisher.onNext(downloadEvent);
+        });
 
-        RxBus.listen(ProgressEvent.class)
-                .observeOn(AndroidSchedulers.mainThread())
-                .subscribe(new DisposableObserver<ProgressEvent>() {
-                    @Override
-                    public void onNext(ProgressEvent progressEvent) {
-                        if (progressEvent.getDownloadIdentifier().equals(link))
-                            holder.cancel.setText(""+progressEvent.getProgress());
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-
-                    }
-
-                    @Override
-                    public void onComplete() {
-                        holder.cancel.setText("done");
-                    }
-                });
     }
+
+    public void updateItem(DownloadEvent event) {
+        downloadEvents.set(downloadEvents.indexOf(event), event);
+        notifyItemChanged(downloadEvents.indexOf(event), event);
+    }
+
 
     // total number of rows
     @Override
     public int getItemCount() {
-        return mData.size();
+        return downloadEvents.size();
     }
-
-    public void setProgress(ProgressEvent progress) {
-    }
-
 
     // stores and recycles views as they are scrolled off screen
-    public class ViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    public class ViewHolder extends RecyclerView.ViewHolder {
         TextView linkTextView;
-        Button cancel;
+        Button cancelButton;
 
         ViewHolder(View itemView) {
             super(itemView);
             linkTextView = itemView.findViewById(R.id.link);
-            cancel = itemView.findViewById(R.id.cancel);
-            linkTextView.setOnClickListener(this);
-            cancel.setOnClickListener(this);
-        }
-
-        @Override
-        public void onClick(View view) {
-            switch (view.getId()) {
-                case R.id.cancel:
-                    mClickListener.onCancel(getAdapterPosition());
-                    break;
-                case R.id.link:
-                    mClickListener.onDownload(getAdapterPosition());
-                    break;
-            }
+            cancelButton = itemView.findViewById(R.id.cancel);
         }
     }
 
-    // convenience method for getting data at click position
-    String getItem(int id) {
-        return mData.get(id);
-    }
-
-    // allows clicks events to be caught
-    void setClickListener(ItemClickListener itemClickListener) {
-        this.mClickListener = itemClickListener;
-    }
-
-    // parent activity will implement this method to respond to click events
-    public interface ItemClickListener {
-        void onDownload(int position);
-
-        void onCancel(int position);
+    public Disposable subscribe(Consumer<DownloadEvent> consumer) {
+        return publisher.subscribe(consumer);
     }
 }

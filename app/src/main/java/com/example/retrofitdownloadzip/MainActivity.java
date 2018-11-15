@@ -4,15 +4,21 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.util.Log;
+import android.widget.Toast;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
 
+import io.reactivex.disposables.Disposable;
+import rx.downloadlibrary.DownloadEvent;
 import rx.downloadlibrary.Downloader;
 
 public class MainActivity extends AppCompatActivity {
     private static final String TAG = "MainActivity";
+    private MyRecyclerViewAdapter myRecyclerViewAdapter;
+    private Disposable commandClickSubscriber;
     private Downloader downloader;
 
     @Override
@@ -20,34 +26,39 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         RecyclerView recyclerView = findViewById(R.id.links);
-        String[] links = {
-                "https://pkg.popguide.me/PM_000579_en_v20181018_124932.tgz",
-                "https://pkg.popguide.me/PM_000183_ru_v20180703_082725.tgz",
-                "https://pkg.popguide.me/PM_000202_it_v20180914_155611.tgz",
-                "https://pkg.popguide.me/PM_000626_zh_v20181005_150653.tgz"
-        };
-        MyRecyclerViewAdapter myRecyclerViewAdapter = new MyRecyclerViewAdapter(Arrays.asList(links));
+        myRecyclerViewAdapter = new MyRecyclerViewAdapter();
         recyclerView.setAdapter(myRecyclerViewAdapter);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
-        myRecyclerViewAdapter.setClickListener(new MyRecyclerViewAdapter.ItemClickListener() {
 
-            @Override
-            public void onCancel(int position) {
-                if (downloader != null) downloader.cancel(links[position]);
-            }
+        List<DownloadEvent> events = new ArrayList<>();
+        events.add(DownloadEvent.newEvent("https://pkg.popguide.me/PM_000579_en_v20181018_124932.tgz", DownloadEvent.Type.DOWNLOAD));
+        events.add(DownloadEvent.newEvent("https://pkg.popguide.me/PM_000183_ru_v20180703_082725.tgz", DownloadEvent.Type.DOWNLOAD));
+        events.add(DownloadEvent.newEvent("https://pkg.popguide.me/PM_000626_zh_v20181005_150653.tgz", DownloadEvent.Type.DOWNLOAD));
+        events.add(DownloadEvent.newEvent("https://pkg.popguide.me/PM_000202_it_v20180914_155611.tgz", DownloadEvent.Type.DOWNLOAD));
+        myRecyclerViewAdapter.setEvents(events);
 
-            @Override
-            public void onDownload(int position) {
-                if (downloader != null) downloader.downloadFileTgz(links[position],
-                        new File(getFilesDir() + File.separator + position + ".tgz"));
+
+        commandClickSubscriber = myRecyclerViewAdapter.subscribe(event -> {
+            Toast.makeText(getBaseContext(), event.getType().name(), Toast.LENGTH_SHORT).show();
+            if (downloader != null) {
+                if (event.getType() == DownloadEvent.Type.DOWNLOAD)
+                    downloader.downloadFileTgz(event.getDownloadUrl(),
+                            new File(getFilesDir() + File.separator + new Random().nextInt() + ".tgz"));
             }
         });
-
+            
         downloader = new Downloader();
-        downloader.registerListener(progress -> {
-            myRecyclerViewAdapter.setProgress(progress);
-            Log.i("progress", progress.getDownloadIdentifier() + " " + progress.getProgress());
+        downloader.subscribe(event -> {
+            if (myRecyclerViewAdapter != null) myRecyclerViewAdapter.updateItem(event);
         });
+    }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if (commandClickSubscriber != null) commandClickSubscriber.dispose();
+        if (downloader != null) downloader.dispose();
+        commandClickSubscriber = null;
+        downloader = null;
     }
 }

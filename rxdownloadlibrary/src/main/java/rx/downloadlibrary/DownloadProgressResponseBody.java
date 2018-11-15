@@ -12,13 +12,13 @@ import okio.Source;
 
 public class DownloadProgressResponseBody extends ResponseBody {
 
-    private String identifier;
+    private String url;
     private ResponseBody responseBody;
     private DownloadProgressListener progressListener;
     private BufferedSource bufferedSource;
 
     public DownloadProgressResponseBody(String url, ResponseBody responseBody, DownloadProgressListener progressListener) {
-        this.identifier = url;
+        this.url = url;
         this.responseBody = responseBody;
         this.progressListener = progressListener;
     }
@@ -54,7 +54,7 @@ public class DownloadProgressResponseBody extends ResponseBody {
                     }
 
                     if (progressListener != null) {
-                        progressListener.update(identifier, totalBytesRead, responseBody.contentLength(), bytesRead == -1);
+                        progressListener.update(url, totalBytesRead, responseBody.contentLength(), bytesRead == -1);
                     }
                     return bytesRead;
                 } catch (IOException e) {

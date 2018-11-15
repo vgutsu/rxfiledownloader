@@ -1,5 +1,5 @@
 package rx.downloadlibrary;
 
 public interface DownloadProgressListener {
-    void update(String downloadIdentifier, long bytesRead, long contentLength, boolean done);
+    void update(String url, long bytesRead, long contentLength, boolean done);
 }

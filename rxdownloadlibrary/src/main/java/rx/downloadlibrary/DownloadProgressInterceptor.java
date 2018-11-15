@@ -9,8 +9,7 @@ import rx.RxBus;
 
 public class DownloadProgressInterceptor implements Interceptor, DownloadProgressListener {
 
-    public DownloadProgressInterceptor() {
-    }
+    public DownloadProgressInterceptor() {}
 
     @Override
     public Response intercept(Chain chain) throws IOException {
@@ -21,8 +20,7 @@ public class DownloadProgressInterceptor implements Interceptor, DownloadProgres
     }
 
     @Override
-    public void update(String downloadIdentifier, long bytesRead, long contentLength, boolean done) {
-        ProgressEvent progressEvent = new ProgressEvent(downloadIdentifier, contentLength, bytesRead);
-        RxBus.publish(progressEvent);
+    public void update(String url, long bytesRead, long contentLength, boolean done) {
+        RxBus.publish(DownloadEvent.newEvent(url, contentLength, bytesRead));
     }
 }

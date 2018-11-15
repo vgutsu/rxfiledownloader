@@ -38,6 +38,9 @@ dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
     implementation 'com.google.code.gson:gson:2.7'
     implementation 'org.slf4j:slf4j-api:1.7.25'
+    implementation 'commons-io:commons-io:2.5'
+    implementation 'org.apache.ant:ant:1.9.7'
+
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'

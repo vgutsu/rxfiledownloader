@@ -18,6 +18,7 @@ import io.reactivex.ObservableSource;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.functions.Function;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
@@ -32,7 +33,6 @@ import rx.RxBus;
 public class Downloader {
 
     private RetrofitService downloadService;
-
     private final CompositeDisposable compositeDisposable = new CompositeDisposable();
 
     public Downloader() {
@@ -46,45 +46,34 @@ public class Downloader {
         downloadService = retrofit.create(RetrofitService.class);
     }
 
-
-    public void registerListener(ProgressListener listener) {
-        Disposable disposable = RxBus.listen(ProgressEvent.class).observeOn(AndroidSchedulers.mainThread()).subscribe(listener::onProgress);
-        compositeDisposable.add(disposable);
-    }
-
     public void downloadZipFile(String url, File destination) {
         // we register our progress subscriber to the Bus
-        // and we only listen for ProgressEvent class events
-        Disposable d = downloadService.downloadFile(url)
+        // and we only downloadSubscriber for DownloadEvent class events
+        compositeDisposable.add(downloadService.downloadFile(url)
                 .subscribeOn(Schedulers.io())
                 .flatMap(saveFile(destination))
                 .flatMap(unPackZip())
-                .subscribeWith(handleResult());
-        compositeDisposable.add(d);
+                .subscribeWith(handleResult()));
     }
 
     public void downloadFile(String url, File destination) {
         // we register our progress subscriber to the Bus
-        // and we only listen for ProgressEvent class events
-        Disposable d = downloadService.downloadFile(url)
+        // and we only downloadSubscriber for DownloadEvent class events
+        compositeDisposable.add(downloadService.downloadFile(url)
                 .subscribeOn(Schedulers.io())
                 .flatMap(saveFile(destination))
-                .subscribeWith(handleResult());
-        compositeDisposable.add(d);
+                .subscribeWith(handleResult()));
     }
 
     public void downloadFileTgz(String url, File destination) {
         // we register our progress subscriber to the Bus
-        // and we only listen for ProgressEvent class events
-        Disposable d = downloadService.downloadFile(url)
+        // and we only downloadSubscriber for DownloadEvent class events
+        compositeDisposable.add(downloadService.downloadFile(url)
                 .subscribeOn(Schedulers.io())
                 .flatMap(saveFile(destination))
                 .flatMap(unPackTgz())
-                .subscribeWith(handleResult());
-
-        compositeDisposable.add(d);
+                .subscribeWith(handleResult()));
     }
-
 
     private Function<? super File, ? extends ObservableSource<File>> unPackZip() {
         return new Function<File, ObservableSource<File>>() {
@@ -139,11 +128,8 @@ public class Downloader {
     private Function<? super File, ? extends ObservableSource<File>> unPackTgz() {
         return new Function<File, ObservableSource<File>>() {
             @Override
-            public ObservableSource<File> apply(File file) {
-
-                //TODO unzip tgz file
-
-                return Observable.just(file);
+            public ObservableSource<File> apply(File tarGz) {
+                return Observable.just(new Unarchiver(tarGz, true).unarchive());
             }
         };
     }
@@ -186,11 +172,19 @@ public class Downloader {
         };
     }
 
-    public void cancel() {
-        compositeDisposable.clear();
+
+    public void subscribe(Consumer<DownloadEvent> consumer) {
+        Disposable disposable = RxBus.listen(DownloadEvent.class).observeOn(AndroidSchedulers.mainThread()).subscribe(consumer);
+        compositeDisposable.add(disposable);
     }
 
-    public void cancel(String link) {
-        compositeDisposable.clear();
+
+    public void dispose() {
+        compositeDisposable.dispose();
+    }
+
+    public void dispose(String url) {
+//        compositeDisposable.dispose();
+//        DisposableManager.dispose(url);
     }
 }

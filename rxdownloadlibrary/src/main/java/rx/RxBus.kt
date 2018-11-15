@@ -5,6 +5,7 @@ import io.reactivex.subjects.PublishSubject
 
 object RxBus {
 
+    // just play with Kotlin
     private val publisher = PublishSubject.create<Any>()
 
     @JvmStatic
