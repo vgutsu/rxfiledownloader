@@ -5,7 +5,7 @@ import okhttp3.ResponseBody
 import okio.*
 import java.io.IOException
 
-class DownloadProgressResponseBodys(private val url: String, private val responseBody: ResponseBody, private val progressListener: DownloadProgressListener?) : ResponseBody() {
+class DownloadProgressResponseBody(private val url: String, private val responseBody: ResponseBody, private val progressListener: DownloadProgressListener?) : ResponseBody() {
 
     private var bufferedSource: BufferedSource? = null
 

@@ -10,7 +10,7 @@ class DownloadProgressInterceptor : Interceptor, DownloadProgressListener {
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
         return originalResponse.newBuilder()
-                .body(DownloadProgressResponseBodys(originalResponse.request().url().toString(), originalResponse.body(), this))
+                .body(DownloadProgressResponseBody(originalResponse.request().url().toString(), originalResponse.body(), this))
                 .build()
     }
 
