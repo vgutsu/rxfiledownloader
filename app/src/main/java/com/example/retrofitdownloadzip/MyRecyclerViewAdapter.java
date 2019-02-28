@@ -1,5 +1,6 @@
 package com.example.retrofitdownloadzip;
 
+import android.content.Context;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -13,15 +14,15 @@ import java.util.List;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.functions.Consumer;
 import io.reactivex.subjects.PublishSubject;
-import rx.downloadlibrary.DownloadEvent;
+import rx.downloadlibrary.Downloadable;
 
 public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAdapter.ViewHolder> {
 
-    PublishSubject<DownloadEvent> publisher = PublishSubject.create();
+    PublishSubject<Downloadable> publisher = PublishSubject.create();
 
-    private List<DownloadEvent> downloadEvents = new ArrayList<>();
+    private List<Downloadable> downloadEvents = new ArrayList<>();
 
-    public void setEvents(List<DownloadEvent> data) {
+    public void setEvents(List<Downloadable> data) {
         this.downloadEvents = data;
         notifyDataSetChanged();
     }
@@ -36,25 +37,23 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
     // binds the data to the TextView in each row
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
-        DownloadEvent downloadEvent = downloadEvents.get(position);
+        Downloadable downloadEvent = downloadEvents.get(position);
         holder.linkTextView.setText(downloadEvent.getDownloadUrl());
         holder.cancelButton.setText("" + downloadEvent.getProgress());
         holder.itemView.setOnClickListener(v -> {
-            if (downloadEvent.getProgress() == 0 || downloadEvent.getProgress() == 100) {
-                downloadEvent.setType(DownloadEvent.Type.DOWNLOAD);
-                publisher.onNext(downloadEvent);
-            }
+            downloadEvent.setType(Downloadable.Type.DOWNLOAD);
+            publisher.onNext(downloadEvent);
         });
         holder.cancelButton.setOnClickListener(v -> {
-            downloadEvent.setType(DownloadEvent.Type.CANCEL);
+            downloadEvent.setType(Downloadable.Type.CANCEL);
             publisher.onNext(downloadEvent);
         });
 
     }
 
-    public void updateItem(DownloadEvent event) {
-        downloadEvents.set(downloadEvents.indexOf(event), event);
-        notifyItemChanged(downloadEvents.indexOf(event), event);
+    public void updateItem(Downloadable downloadable) {
+        downloadEvents.set(downloadEvents.indexOf(downloadable), downloadable);
+        notifyItemChanged(downloadEvents.indexOf(downloadable), downloadable);
     }
 
 
@@ -74,9 +73,13 @@ public class MyRecyclerViewAdapter extends RecyclerView.Adapter<MyRecyclerViewAd
             linkTextView = itemView.findViewById(R.id.link);
             cancelButton = itemView.findViewById(R.id.cancel);
         }
+
+        public Context getContext() {
+            return itemView.getContext();
+        }
     }
 
-    public Disposable subscribe(Consumer<DownloadEvent> consumer) {
+    public Disposable subscribe(Consumer<Downloadable> consumer) {
         return publisher.subscribe(consumer);
     }
 }
