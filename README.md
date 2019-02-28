@@ -1,2 +1,2 @@
-# Android download zip file using Retrofit and RxJava
-redone with RxJava2 
+# Android download file using Retrofit and RxJava
+redone with RxJava2 + Kotlin
