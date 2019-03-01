@@ -8,19 +8,19 @@ internal class CustomCompositeDisposable {
     private val compositeDisposable: CompositeDisposable = CompositeDisposable()
     private val disposableMap: HashMap<Any, Disposable> = HashMap()
 
-    fun add(key: Any, value: Disposable) {
-        disposableMap[key] = value
+    fun add(tag: String, value: Disposable) {
+        disposableMap[tag] = value
         compositeDisposable.add(value)
     }
 
-    fun isDisposed(key: String): Boolean {
-        return !disposableMap.containsKey(key) || disposableMap[key]!!.isDisposed
+    fun isDisposed(tag: String): Boolean {
+        return !disposableMap.containsKey(tag) || disposableMap[tag]!!.isDisposed
     }
 
-    fun dispose(url: String) {
-        val disposable = disposableMap[url]
+    fun dispose(tag: String) {
+        val disposable = disposableMap[tag]
         if (disposable != null) {
-            disposableMap.remove(url)
+            disposableMap.remove(tag)
             compositeDisposable.remove(disposable)
         }
     }

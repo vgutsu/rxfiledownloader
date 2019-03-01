@@ -22,8 +22,8 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         List<Downloadable> events = new ArrayList<>();
-        events.add(Downloadable.Companion.newEvent("https://pkg.popguide.me/PM_000579_en_v20181018_124932.tgz"));
-        events.add(Downloadable.Companion.newEvent("https://pkg.popguide.me/PM_000183_ru_v20180703_082725.tgz"));
+//        events.add(Downloadable.Companion.newEvent("https://pkg.popguide.me/PM_000579_en_v20181018_124932.tgz"));
+//        events.add(Downloadable.Companion.newEvent("https://pkg.popguide.me/PM_000183_ru_v20180703_082725.tgz"));
         events.add(Downloadable.Companion.newEvent("https://pkg.popguide.me/PM_000626_zh_v20181005_150653.tgz"));
         events.add(Downloadable.Companion.newEvent("https://pkg.popguide.me/PM_000202_it_v20180914_155611.tgz"));
 
@@ -46,7 +46,7 @@ public class MainActivity extends AppCompatActivity {
             if (event.getType() == Downloadable.Type.CANCEL) downloader.cancel(event);
         });
 
-        findViewById(R.id.loadAll).setOnClickListener(v -> downloader.downLoadAsync(events));
+        findViewById(R.id.loadAll).setOnClickListener(v -> downloader.downloadList("all", events));
     }
 
     @Override

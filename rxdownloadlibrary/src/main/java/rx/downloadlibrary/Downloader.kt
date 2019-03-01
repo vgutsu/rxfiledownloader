@@ -1,6 +1,7 @@
 package rx.downloadlibrary
 
 import android.net.Uri
+import android.util.Log
 import com.jakewharton.retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory
 import io.reactivex.Observable
 import io.reactivex.android.schedulers.AndroidSchedulers
@@ -46,40 +47,40 @@ class Downloader {
         this.filesDir = filesDir
     }
 
-    fun downloadSync(downloadables: List<Downloadable>) {
-        compositeDisposable.add("list", Observable.fromIterable(downloadables)
-                .subscribeOn(Schedulers.io())
+
+    fun downloadList(tag: String, downloadables: List<Downloadable>) {
+        if (!compositeDisposable.isDisposed(tag)) return
+        compositeDisposable.add(tag, Observable.fromIterable(downloadables)
+                .subscribeOn(Schedulers.single())
                 .flatMap { d -> downloadService.downloadFile(d.downloadUrl) }
-                .map { response ->
-                    try {
-                        val sink = Okio.buffer(Okio.sink(File(filesDir!!.toString() + Uri.parse(response.raw().request().url().toString()).lastPathSegment)))
-                        sink.writeAll(response.body().source())
-                        sink.close()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    }
-                }.subscribe())
+                .doOnError { Log.e("error", "" + it.message) }
+                .map { response -> saveSource(response) }
+                .subscribe({ name -> print("name$name") }, { error -> print("error$error") }))
     }
 
-    fun downLoadAsync(downloadables: List<Downloadable>) {
-        for (d in downloadables) download(d)
-    }
 
     fun download(downloadable: Downloadable) {
         val url = downloadable.downloadUrl
         if (!compositeDisposable.isDisposed(url)) return
         compositeDisposable.add(url, downloadService.downloadFile(url)
-                .subscribeOn(Schedulers.io())
-                .map { response ->
-                    try {
-                        val sink = Okio.buffer(Okio.sink(File(filesDir!!.toString() + Uri.parse(response.raw().request().url().toString()).lastPathSegment)))
-                        sink.writeAll(response.body().source())
-                        sink.close()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    }
-                }.subscribe())
+                .subscribeOn(Schedulers.single())
+                .map { response -> saveSource(response) }
+                .subscribe({ name -> print("name$name") }, { error -> print("error$error") }))
     }
+
+    private fun saveSource(response: Response<ResponseBody>): String? {
+        var name: String? = null
+        try {
+            name = Uri.parse(response.raw().request().url().toString()).lastPathSegment
+            val sink = Okio.buffer(Okio.sink(File(filesDir!!.toString() + name)))
+            sink.writeAll(response.body().source())
+            sink.close()
+        } catch (e: IOException) {
+            e.printStackTrace()
+        }
+        return name
+    }
+
 
     fun listenProgress(consumer: Consumer<Downloadable>) {
         RxBus.listen(Downloadable::class.java).observeOn(AndroidSchedulers.mainThread()).subscribe(consumer)
