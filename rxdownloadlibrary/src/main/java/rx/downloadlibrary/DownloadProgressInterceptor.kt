@@ -9,12 +9,16 @@ class DownloadProgressInterceptor : Interceptor, DownloadProgressListener {
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val originalResponse = chain.proceed(chain.request())
+        val url = chain.request().url().toString()
         return originalResponse.newBuilder()
-                .body(DownloadProgressResponseBody(originalResponse.request().url().toString(), originalResponse.body(), this))
+                .body(DownloadProgressResponseBody(url, originalResponse.body(), this))
                 .build()
     }
 
     override fun update(url: String, bytesRead: Long, contentLength: Long) {
-        RxBus.publish(Downloadable.newEvent(url, contentLength, bytesRead))
+        val downloadable = Downloadable(url)
+        downloadable.contentLength = contentLength
+        downloadable.byteRead = bytesRead
+        RxBus.publish(downloadable)
     }
 }

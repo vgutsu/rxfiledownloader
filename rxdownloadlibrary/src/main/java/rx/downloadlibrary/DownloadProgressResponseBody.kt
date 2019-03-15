@@ -34,8 +34,7 @@ class DownloadProgressResponseBody(private val url: String, private val response
                     if (bytesRead > -1) {
                         totalBytesRead += bytesRead
                     }
-                    //                    bytesRead == -1
-                    progressListener?.update(url, totalBytesRead, responseBody.let { contentLength() })
+                    progressListener?.update(url, totalBytesRead, contentLength())
                     return bytesRead
                 } catch (e: IOException) {
                     // ignored
@@ -43,6 +42,5 @@ class DownloadProgressResponseBody(private val url: String, private val response
                 return -1
             }
         }
-
     }
 }
